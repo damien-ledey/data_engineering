@@ -2,20 +2,25 @@ import scrapy
 
 
 class SteamSearchSpiderSpider(scrapy.Spider):
+
     name = "steam_search_spider"
+    
+    # Urls utilisées pour débuter le scraping
     allowed_domains = ["store.steampowered.com"]
     start_urls = ["https://store.steampowered.com/search?term=&page=1&count=100"]
     current_page = 1
 
     def parse(self, response):
+        # Passer en revue chaque jeu sur la page de recherche en utilisant la classe search_result_row
         for cit in response.xpath('//a[contains(@class, "search_result_row")]'):
+            # Extraire les informations importantes pour chaque jeu
             id_value = cit.xpath('.//@data-ds-appid').get()
             title_value = clean_spaces(cit.xpath('.//span[@class="title"]/text()').get())
             thumbnail_link = cit.xpath('.//div[@class="search_capsule"]/img/@src').get()
             release_value = clean_spaces(cit.xpath('.//div[@class="search_released responsive_secondrow"]/text()').get())
             review_value = clean_spaces(cit.xpath('.//div[@class="search_reviewscore responsive_secondrow"]/span/@data-tooltip-html').get())
 
-            # Clean review_value
+            # Nettoyer review_value
             if review_value is not None:
                 review_text = review_value.split("<br>")[0].strip()
                 review_score = review_value.split("<br>")[1].split(" ")[0].strip()[0:-1]
@@ -27,24 +32,28 @@ class SteamSearchSpiderSpider(scrapy.Spider):
 
             price_value = clean_spaces(cit.xpath('.//div[@class="discount_final_price"]/text()').get())
 
-
+            # Construction de l'url du hover pour obtenir les tags
             hover_url = f"https://store.steampowered.com/apphoverpublic/{id_value}?review_score_preference=0&l=french&ls[]=french&origin=https://store.steampowered.com&pagev6=true"
 
+            # Valeur par défaut pour les jeux sans prix
             if price_value is None:
                 price_value = "Gratuit"
 
+            # Parser la page hover pour obtenir les tags
             yield scrapy.Request(url=hover_url, callback=self.parse_hover, meta={'app_id': id_value, 'title': title_value, 'thumbnail_link': thumbnail_link, 'release': release_value, 'review_text': review_text, 'review_score': review_score, 'review_total': review_total, 'price': price_value})
         
         # Pagination
         self.current_page += 1
 
-        if self.current_page > 1:
+        # Limiter aux 100 premières pages pour éviter de scraper tout Steam
+        if self.current_page > 100:
             return
 
         next_page_url = f"https://store.steampowered.com/search?term=&page={self.current_page}&count=100"
         yield scrapy.Request(url=next_page_url, callback=self.parse)
 
     def parse_hover(self, response):
+        # Redefinir les valeurs extraites précédemment
         app_id = response.meta['app_id']
         title = response.meta['title']
         release = response.meta['release']
@@ -54,6 +63,7 @@ class SteamSearchSpiderSpider(scrapy.Spider):
         review_score = response.meta['review_score']
         review_total = response.meta['review_total']
 
+        # Recuperer les tags depuis le hover un par un
         tags = []
         for tag in response.xpath('.//div[@class="app_tag"]/text()'):
             tags.append(clean_spaces(tag.get()))
@@ -61,6 +71,7 @@ class SteamSearchSpiderSpider(scrapy.Spider):
 
         yield {'app_id': app_id, 'title': title, 'thumbnail_link': thumbnail_link, 'release': release, 'review_text': review_text, 'review_score': review_score, 'review_total': review_total, 'price': price, 'tags': tags}
 
+# Fonction pour retirer les espaces inutiles
 def clean_spaces(string_):
     if string_ is not None:
         return " ".join(string_.split())
