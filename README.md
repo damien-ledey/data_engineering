@@ -1,10 +1,17 @@
-# data_engineering
-Projet de scraping et de mise en place d'une interface pour explorer les données obtenues
+# Steam Scraping
+Projet de scraping et de mise en place d'une interface pour explorer les données obtenues de la page de recherche de [Steam](https://store.steampowered.com/search?term=&page=1&count=100)
 
 # Pré-requis
-Avoir docker lancé
+Avoir Docker installé et lancé
 
-# Commandes pour l'exécution
-cd .\steam_project\ \
-scrapy crawl steam_search_spider -o data/steam_search.csv -t csv ### A faire seulement après avoir supprimé le fichier cible sinon la spider ajoute à la fin du document\
-python3 .\steam_mongoDB.py
+# Lancer l'application
+
+- Se placer dans le dossier data_engineering
+- Puis exécuter cette commande dans un terminal :
+```bash
+docker-compose up -d --build
+```
+- Enfin aller sur le lien suivant : **http://localhost:8501**
+
+Il peut exister un délai entre le lancement du conteneur Docker et l'actualisation de la page. Vous pouvez donc rafraîchir la page après avoir attendu un peu.
+
