@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: steam_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - steam_network
+
+  streamlit:
+    build: .
+    container_name: steam_app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - mongodb
+    networks:
+      - steam_network
+    environment:
+      - MONGO_HOST=mongodb
+    volumes:
+      - ./steam_project:/app/steam_project
+
+networks:
+  steam_network:
+    driver: bridge
+
+volumes:
+  mongo_data:

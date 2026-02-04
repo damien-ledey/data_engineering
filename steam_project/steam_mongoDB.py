@@ -2,7 +2,7 @@ import pandas as pd
 import pymongo
 
 # ================== Connexion à la base de données MongoDB ==================
-client = pymongo.MongoClient()
+client = pymongo.MongoClient('mongodb')
 database = client['projet']
 collection = database['steam_games']
 
@@ -10,11 +10,14 @@ collection = database['steam_games']
 df_ks = pd.read_csv('./data/steam_search.csv')
 print(df_ks.head(5))
 
-#collection.delete_many({})
-#collection.insert_many(df_ks.to_dict('records'))
+collection.delete_many({})
+collection.insert_many(df_ks.to_dict('records'))
 
 print("Data inserted into MongoDB collection 'steam_games' in database 'projet'.")
 
+
+# Exemple d'utilisation des requêtes MongoDB
+"""
 # ============================================================================
 
 print("\n*********** Question 0 ***********\n")
@@ -85,3 +88,4 @@ print("\nPas fait\n\n")
 
 
 print("\n\n")
+"""
