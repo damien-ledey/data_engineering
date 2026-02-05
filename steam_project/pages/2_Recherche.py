@@ -1,11 +1,35 @@
 import os
+import re
 
 import pandas as pd
 import pymongo
 import streamlit as st
 from elasticsearch import Elasticsearch
 
+def clean_price(price_str):
+    if price_str is None:
+        return 0.0
+    if isinstance(price_str, (int, float)):
+        return float(price_str)
+    if not isinstance(price_str, str):
+        return 0.0
+    lower_price = price_str.lower()
+    if "gratuit" in lower_price or "free" in lower_price:
+        return 0.0
+    match = re.findall(r"[0-9]+(?:[.,][0-9]+)?", price_str)
+    if not match:
+        return 0.0
+    clean = match[0].replace(",", ".")
+    try:
+        return float(clean)
+    except ValueError:
+        return 0.0
+
+
+
 st.set_page_config(page_title="Recherche", page_icon="https://store.steampowered.com/favicon.ico", layout="wide")
+
+DEFAULT_MAX_PRICE = 60
 
 # MongoDB connexion
 @st.cache_resource
@@ -76,8 +100,13 @@ es = get_elasticsearch()
 with st.sidebar:
     st.header("Filtres")
     # Filtre Prix
-    price_filter = st.radio("Prix", ["Tous", "Gratuit", "Payant"])
+    st.divider()
+    st.subheader("Budget")
     
+  
+    max_price = st.slider("Prix maximum", 0, 100, DEFAULT_MAX_PRICE, step=5, format="%d£")
+    
+    include_free = st.checkbox("Inclure les jeux Gratuits", value=True)    
     st.divider()
     
     # filtre catégories
@@ -99,11 +128,11 @@ with col2:
     show_all = st.checkbox("Voir TOUT")
 
 if show_all:
-    limit = 10000 
+    limit = 10000
 else:
     limit = limit_val
 
-if query or price_filter != "Tous" or selected_tags:
+if query or max_price != DEFAULT_MAX_PRICE or selected_tags or show_all:
     try:
         search_query = {
             "bool": {
@@ -127,20 +156,18 @@ if query or price_filter != "Tous" or selected_tags:
             search_query["bool"]["must"].append({"match_all": {}})
 
         
-        if price_filter == "Gratuit":
-            search_query["bool"]["filter"].append({"term": {"price.keyword": "Gratuit"}})
-        elif price_filter == "Payant":
-            search_query["bool"]["must_not"].append({"term": {"price.keyword": "Gratuit"}})
-
         # On gère les tags sélectionnés
         for tag in selected_tags:
             search_query["bool"]["filter"].append({"match": {"tags": tag}})
 
 
+        # On recupere plus de resultats pour que le filtrage prix ne reduise pas trop notre affichage
+        fetch_size = limit if show_all else min(limit * 5, 1000)
+
         response = es.search(
             index="steam_games",
-            size=limit,
-            query=search_query, 
+            size=fetch_size,
+            query=search_query,
         )
         
         hits = [hit.get("_source", {}) for hit in response.get("hits", {}).get("hits", [])]
@@ -149,39 +176,40 @@ if query or price_filter != "Tous" or selected_tags:
             df = pd.DataFrame(hits)
             
             df["lien_steam"] = "https://store.steampowered.com/app/" + df["app_id"].astype(str)
-
-            st.write(f"{len(hits)} résultats trouvés.")
+            
+            
+            df["price_val"] = df["price"].apply(clean_price)
             
            
-            st.dataframe(
-                df,
+            if include_free:
+
+                df = df[ (df["price_val"] <= max_price) ]
+            else:
+                df = df[ (df["price_val"] <= max_price) & (df["price_val"] > 0) ]
+
+            nb_restants = len(df)
+            
+            if nb_restants > 0:
+                # On limite l'affichage au nombre demande par l'utilisateur
+                df = df.head(limit)
+                st.write(f"{len(df)} résultats affichés (après filtres).")
                 
-                column_order=["thumbnail_link", "title", "review_score", "review_total", "price", "lien_steam"],
-                hide_index=True,
-                
-                column_config={
-                    "thumbnail_link": st.column_config.ImageColumn("Image"),
-                    
-                    "title": st.column_config.TextColumn("Titre", width="medium"),
-                    
-                    "review_score": st.column_config.NumberColumn(
-                        "Note",
-                        format="%d%%",  
-                        help="Pourcentage d'évaluations positives"
-                    ),
-                    
-                    "review_total": st.column_config.TextColumn("Nb Avis"), 
-                    
-                    "price": st.column_config.TextColumn("Prix"),
-                    
-                    # lien plus propre qu'url 
-                    "lien_steam": st.column_config.LinkColumn(
-                        "Lien Steam", 
-                        display_text=" Voir la page" 
-                    )
-                },
-                use_container_width=True,
-            )
+                st.dataframe(
+                    df,
+                    column_order=["thumbnail_link", "title", "review_score", "review_total", "price", "lien_steam"],
+                    hide_index=True,
+                    column_config={
+                        "thumbnail_link": st.column_config.ImageColumn("Image"),
+                        "title": st.column_config.TextColumn("Titre", width="medium"),
+                        "review_score": st.column_config.NumberColumn("Note", format="%d%%"),
+                        "review_total": st.column_config.TextColumn("Nb Avis"), 
+                        "price": st.column_config.TextColumn("Prix"),
+                        "lien_steam": st.column_config.LinkColumn("Lien Steam", display_text="Voir la page")
+                    },
+                    use_container_width=True
+                )
+            else:
+                st.warning(f"Aucun jeu trouvé en dessous de {max_price}£ avec ces critères.")
         else:
             st.info("Aucun résultat.")
             
