@@ -104,7 +104,7 @@ with st.sidebar:
     st.subheader("Budget")
     
   
-    max_price = st.slider("Prix maximum", 0, 100, DEFAULT_MAX_PRICE, step=5, format="%d£")
+    max_price = st.slider("Prix maximum", 0, 100, DEFAULT_MAX_PRICE, step=5, format="%d€")
     
     include_free = st.checkbox("Inclure les jeux Gratuits", value=True)    
     st.divider()
@@ -209,7 +209,7 @@ if query or max_price != DEFAULT_MAX_PRICE or selected_tags or show_all:
                     use_container_width=True
                 )
             else:
-                st.warning(f"Aucun jeu trouvé en dessous de {max_price}£ avec ces critères.")
+                st.warning(f"Aucun jeu trouvé en dessous de {max_price}€ avec ces critères.")
         else:
             st.info("Aucun résultat.")
             
