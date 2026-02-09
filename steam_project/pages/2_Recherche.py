@@ -26,6 +26,12 @@ def clean_price(price_str):
         return 0.0
 
 
+def clean_avis_count(avis_str):
+    if not isinstance(avis_str, str):
+        return 0
+    clean = ''.join(filter(str.isdigit, avis_str))
+    return int(clean) if clean else 0
+
 
 st.set_page_config(page_title="Recherche", page_icon="https://store.steampowered.com/favicon.ico", layout="wide")
 
@@ -103,7 +109,7 @@ with st.sidebar:
     st.divider()
     st.subheader("Budget")
     
-  
+  #budget 
     max_price = st.slider("Prix maximum", 0, 100, DEFAULT_MAX_PRICE, step=5, format="%d€")
     
     include_free = st.checkbox("Inclure les jeux Gratuits", value=True)    
@@ -116,8 +122,16 @@ with st.sidebar:
         tags_list = []
     selected_tags = st.multiselect("Catégories", tags_list)
 
+    #potentiel meilleurs jeux à découvrir 
+
+    st.subheader("Filtres spéciaux")
+    show_hidden_games = st.toggle("Mode meilleur jeux peu connus", help="Affiche uniquement les jeux excellents (Note > 90%) mais peu connus (< 2000 avis).")
+    show_best_games = st.toggle("Mode meilleur jeux (connus)", help="Affiche uniquement les jeux excellents et connus ")
+    jeux_bruits = st.toggle("Mode jeux polémiques", help="Affiche uniquement les jeux avce une note moyenne et beaucoup d'avis ")
+
+
 st.title("Recherche")
-query = st.text_input("Rechercher un jeu", placeholder="Ex: minecraft, sport...")
+query = st.text_input("Rechercher un jeu", placeholder="Ex: action, sport...")
 
 col1, col2 = st.columns([3, 1])
 
@@ -162,7 +176,7 @@ if query or max_price != DEFAULT_MAX_PRICE or selected_tags or show_all:
 
 
         # On recupere plus de resultats pour que le filtrage prix ne reduise pas trop notre affichage
-        fetch_size = limit if show_all else min(limit * 5, 1000)
+        fetch_size = 10000 if show_all else 3000
 
         response = es.search(
             index="steam_games",
@@ -176,16 +190,29 @@ if query or max_price != DEFAULT_MAX_PRICE or selected_tags or show_all:
             df = pd.DataFrame(hits)
             
             df["lien_steam"] = "https://store.steampowered.com/app/" + df["app_id"].astype(str)
-            
-            
             df["price_val"] = df["price"].apply(clean_price)
             
-           
+            df["review_count_val"] = df["review_total"].apply(clean_avis_count)
+            
             if include_free:
-
                 df = df[ (df["price_val"] <= max_price) ]
             else:
                 df = df[ (df["price_val"] <= max_price) & (df["price_val"] > 0) ]
+
+            # filtre meilleurs jeux pas connus 
+            if show_hidden_games:
+                df = df[(df["review_score"] >= 90) & (df["review_count_val"] < 2000)]
+                st.info("Seuls les jeux très bien notés mais pas connus sont affichés.")
+            
+            #filtre meilleurs jeux et connus 
+            elif show_best_games:
+                df = df[ (df["review_score"] >= 95) & (df["review_count_val"] > 50000) ]
+                st.success("Les meilleurs jeux")
+            
+            #filtre jeux bruyants 
+            elif jeux_bruits:
+                df = df[ (df["review_score"] > 40) & (df["review_score"] < 75) & (df["review_count_val"] > 10000) ]
+                st.warning("Jeux qui divisent les joueurs")
 
             nb_restants = len(df)
             
