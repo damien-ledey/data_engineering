@@ -48,8 +48,7 @@ data = pd.DataFrame(list(cur))
 
 data_load_state.empty()
 
-if st.checkbox('Show raw data'):
-    st.subheader('Raw data')
-    data_load_state = st.write(data.head(10))
+st.subheader('Raw data')
+data_load_state = st.write(data.head(10))
 
 st.button('Recharger les données')

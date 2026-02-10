@@ -112,7 +112,7 @@ with st.sidebar:
   #budget 
     max_price = st.slider("Prix maximum", 0, 100, DEFAULT_MAX_PRICE, step=5, format="%d€")
     
-    include_free = st.checkbox("Inclure les jeux Gratuits", value=True)    
+    include_free = st.checkbox("Inclure les jeux gratuits", value=True)    
     st.divider()
     
     # filtre catégories
@@ -126,7 +126,7 @@ with st.sidebar:
 
     st.subheader("Filtres spéciaux")
     show_hidden_games = st.toggle("Mode meilleur jeux peu connus", help="Affiche uniquement les jeux excellents (Note > 90%) mais peu connus (< 2000 avis).")
-    show_best_games = st.toggle("Mode meilleur jeux (connus)", help="Affiche uniquement les jeux excellents et connus ")
+    show_best_games = st.toggle("Mode meilleur jeux connus", help="Affiche uniquement les jeux excellents et connus ")
     jeux_bruits = st.toggle("Mode jeux polémiques", help="Affiche uniquement les jeux avce une note moyenne et beaucoup d'avis ")
 
 
