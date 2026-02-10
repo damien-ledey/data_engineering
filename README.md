@@ -56,18 +56,15 @@ db.steam_games.find().limit(5)
 
 ##  Fonctionnement
 
-```
 1. Docker Compose démarre MongoDB + Streamlit
 2. start.sh → Scrapy scrape Steam et enregistre le résultat dans un csv → Charge automatiquement CSV et met les données dans MongoDB et ElasticSearch
 3. Home.py (Streamlit) → Lit MongoDB → Affiche dans le navigateur
 4. Recherche.py utilise ElasticSearch pour faire des recherche facilement et rapidement
-```
 
 ---
 
 ##  Choix techniques
 
-```
 Plutôt que d'utiliser une seule base de données pour tout faire, nous avons choisis d'utiliser tout d'abord MongoDB qui nous permet de stocker les données brutes des jeux Steam. Nous avons choisi cela car la structure des données Steam est flexible et le format de MongoDB est parfait pour stocker ces objets sans avoir trop de contraintes. 
 
 Nous avons également utilisé Elasticsearch pour notre moteur de recherche car MongoDB est un peu moins performant pour la rechercher textuelle complexe (donc fautes de frappes, pertinence etc...).
@@ -75,9 +72,6 @@ Nous avons également utilisé Elasticsearch pour notre moteur de recherche car 
 Notre interface utilisateur est réalisée avec Streamlit car cela nous permet de développer une interface Web interactive complètement en Python, on a pas besoin d'HTML/CSS. De plus on peut utiliser pandas pour tout ce qui est affichage des tableaux de données.
 
 On utilise également Docker qui nous permet d'avoir le même environnement de travail, ça évite de perdre du temps avec des problèmes de compatibillité. Il nous suffit de faire un 'docker-compose up' et toute la stack démarre d'un coup. Cela permet de laisser nos machines propres et ça rend le projet plus facil à récupérer et à tester pour quelqu'un d'autre. 
-
-
-```
 
 ---
 
