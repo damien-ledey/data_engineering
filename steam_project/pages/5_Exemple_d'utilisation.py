@@ -132,13 +132,3 @@ mot = st.text_input("Mot à rechercher dans le titre des jeux", "sport")
 affichage_jeux_mot(mot)
 
 st.markdown("---")
-
-# ============================================================================
-
-st.markdown("""
-            ### Exemple 5 : Afficher les 5 développeurs avec le plus de jeux
-
-            __Not implemented yet.__
-            """)
-
-

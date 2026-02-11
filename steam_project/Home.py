@@ -16,7 +16,14 @@ st.markdown("---")
 st.markdown("""
 ## Bienvenue dans l'application **Steam Scraper** !
 Dans cette application, vous allez pouvoir explorer les données extraites du site [Steam](https://store.steampowered.com/) à l'aide de [Scrapy](https://www.scrapy.org/).
-
+Ces données seront scrappées au démarrage de l'application, si le fichier csv n'existe pas déjà.
+            
+Le site possède 3 pages différentes :
+            - **Interprétation des données** : une page de visualisation et d'analyse des données extraites
+            - **Recherche** : une page de recherche avancée pour trouver les jeux qui vous intéressent
+            - **Exemple d'utilisation** : une page qui montre comment utiliser les données extraites pour faire des requêtes et des analyses avec MongoDB
+Toutes ces pages sont accessibles via la barre latérale à gauche.
+            
 ## Credits
 ZERROUG Meliana - LEDEY Damien 
 
@@ -38,9 +45,9 @@ def load_data():
         df['price'] = 'N/A'
     return df
 
-st.sidebar.success("Select a demo above.")
+st.sidebar.success("Sélectionnez une démo ci-dessus.")
 
-data_load_state = st.text('Loading data...')
+data_load_state = st.text('Chargement des données...')
 
 collection = get_database()
 cur = collection.find({}, {'_id': 0})
@@ -48,7 +55,5 @@ data = pd.DataFrame(list(cur))
 
 data_load_state.empty()
 
-st.subheader('Raw data')
+st.subheader('Données brutes extraites de Steam')
 data_load_state = st.write(data.head(10))
-
-st.button('Recharger les données')

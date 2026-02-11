@@ -67,11 +67,11 @@ db.steam_games.find().limit(5)
 
 Plutôt que d'utiliser une seule base de données pour tout faire, nous avons choisis d'utiliser tout d'abord MongoDB qui nous permet de stocker les données brutes des jeux Steam. Nous avons choisi cela car la structure des données Steam est flexible et le format de MongoDB est parfait pour stocker ces objets sans avoir trop de contraintes. 
 
-Nous avons également utilisé Elasticsearch pour notre moteur de recherche car MongoDB est un peu moins performant pour la rechercher textuelle complexe (donc fautes de frappes, pertinence etc...).
+Nous avons également utilisé Elasticsearch pour notre moteur de recherche car MongoDB est un moins performant pour la rechercher textuelle complexe (fautes de frappes, pertinence etc...).
 
-Notre interface utilisateur est réalisée avec Streamlit car cela nous permet de développer une interface Web interactive complètement en Python, on a pas besoin d'HTML/CSS. De plus on peut utiliser pandas pour tout ce qui est affichage des tableaux de données.
+Notre interface utilisateur a été réalisée avec Streamlit, cela nous permet de développer une interface Web interactive complètement en Python, on a pas besoin d'HTML/CSS. De plus on peut utiliser pandas pour tout ce qui est affichage des tableaux de données.
 
-On utilise également Docker qui nous permet d'avoir le même environnement de travail, ça évite de perdre du temps avec des problèmes de compatibillité. Il nous suffit de faire un 'docker-compose up' et toute la stack démarre d'un coup. Cela permet de laisser nos machines propres et ça rend le projet plus facil à récupérer et à tester pour quelqu'un d'autre. 
+On utilise également Docker qui nous permet d'avoir le même environnement de travail, ça évite de perdre du temps avec des problèmes de compatibillité. Il nous suffit de faire un 'docker-compose up' et toute la stack démarre d'un coup. Cela permet de laisser nos machines propres et ça rend le projet plus facile à récupérer et à tester pour quelqu'un d'autre. 
 
 ---
 
@@ -90,6 +90,9 @@ docker ps
 ### Les données ne s'affichent pas (Total de jeux = 0)
 
 Les données sont normalement chargées automatiquement au démarrage. Si elles ne s'affichent pas :
+
+- Vérifier la présence d'un fichier steam_project.csv dans le dossier data.
+- S'il est vide, supprimez-le. 
 
 ```bash
 # Reconstruire et relancer les conteneurs
